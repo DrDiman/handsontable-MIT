@@ -1,16 +1,16 @@
 {
-  "name": "handsontable",
-  "description": "Handsontable is a JavaScript Spreadsheet Component available for React, Angular and Vue.",
+  "name": "handsontable-mit",
+  "description": "Handsontable is a JavaScript Spreadsheet Component available for React, Angular and Vue. This is an old package version of Handsontable - a fork of the MIT licensed version 6.2.2 with the goal of fixing security issues and some other minor issues in the MIT version. This fork will be patched and will only increment patch versions.",
   "homepage": "https://handsontable.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/handsontable/handsontable.git"
+    "url": "https://github.com/DrDiman/handsontable-MIT"
   },
   "bugs": {
-    "url": "https://github.com/handsontable/handsontable/issues"
+    "url": "https://github.com/DrDiman/handsontable-MIT/issues"
   },
-  "author": "Handsoncode <hello@handsontable.com>",
-  "version": "6.2.2",
+  "author": "deps-developers <SupportDEPS@epam.com>",
+  "version": "6.2.3",
   "browser": "dist/handsontable.js",
   "main": "commonjs/index.js",
   "module": "es/index.js",

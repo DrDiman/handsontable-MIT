@@ -8,11 +8,43 @@ export function isNumeric(n) {
   /* eslint-disable */
   var t = typeof n;
 
-  return t == 'number' ? !isNaN(n) && isFinite(n) :
-    t == 'string' ? !n.length ? false :
-      n.length == 1 ? /\d/.test(n) :
-        /^\s*[+-]?\s*(?:(?:\d+(?:\.\d+)?(?:e[+-]?\d+)?)|(?:0x[a-f\d]+))\s*$/i.test(n) :
-      t == 'object' ? !!n && typeof n.valueOf() == 'number' && !(n instanceof Date) : false;
+  if (t == 'number') {
+    return !isNaN(n) && isFinite(n);
+  }
+
+  if (t == 'string') {
+    if (!n.length) {
+      return false;
+    }
+
+    if (n.length == 1) {
+      return /\d/.test(n);
+    }
+
+    const trimmed = n.trim();
+
+    // Check for hexadecimal format first (0x...)
+    if (/^0x[a-fA-F0-9]+$/i.test(trimmed)) {
+      return true;
+    }
+
+    // Check for comma-separated decimal format (e.g., "77,70" -> 77.7)
+    const commaDecimalPattern = /^[+-]?\s*(\d+(,\d+)?([eE][+-]?\d+)?|,\d+([eE][+-]?\d+)?)$/;
+    if (commaDecimalPattern.test(trimmed)) {
+      return true;
+    }
+
+    // Check for decimal format with optional sign, decimal point, and exponent
+    // Using separate checks to avoid nested quantifiers and ReDoS
+    const decimalPattern = /^[+-]?\s*(\d+(\.\d+)?([eE][+-]?\d+)?|\.\d+([eE][+-]?\d+)?)$/;
+    return decimalPattern.test(trimmed);
+  }
+
+  if (t == 'object') {
+    return !!n && typeof n.valueOf() == 'number' && !(n instanceof Date);
+  }
+
+  return false;
 }
 
 /**

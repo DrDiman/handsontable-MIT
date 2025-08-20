@@ -23,8 +23,8 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- * Version: 6.2.2
- * Release date: 19/12/2018 (built at 18/12/2018 14:40:17)
+ * Version: 6.2.3
+ * Release date: 19/12/2018 (built at 25/08/2025 09:28:43)
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -642,9 +642,10 @@ function empty(element) {
   while (child = element.lastChild) {
     element.removeChild(child);
   }
-}
+} // Safer regex that avoids ReDoS vulnerability by using non-capturing groups and avoiding nested quantifiers
 
-var HTML_CHARACTERS = /(<(.*)>|&(.*);)/;
+
+var HTML_CHARACTERS = /(?:<[^>]*>|&[^;]*;)/;
 /**
  * Insert content into element trying avoid innerHTML method.
  * @return {void}
@@ -2106,7 +2107,43 @@ function isNumeric(n) {
   /* eslint-disable */
   var t = _typeof(n);
 
-  return t == 'number' ? !isNaN(n) && isFinite(n) : t == 'string' ? !n.length ? false : n.length == 1 ? /\d/.test(n) : /^\s*[+-]?\s*(?:(?:\d+(?:\.\d+)?(?:e[+-]?\d+)?)|(?:0x[a-f\d]+))\s*$/i.test(n) : t == 'object' ? !!n && typeof n.valueOf() == 'number' && !(n instanceof Date) : false;
+  if (t == 'number') {
+    return !isNaN(n) && isFinite(n);
+  }
+
+  if (t == 'string') {
+    if (!n.length) {
+      return false;
+    }
+
+    if (n.length == 1) {
+      return /\d/.test(n);
+    }
+
+    var trimmed = n.trim(); // Check for hexadecimal format first (0x...)
+
+    if (/^0x[a-fA-F0-9]+$/i.test(trimmed)) {
+      return true;
+    } // Check for comma-separated decimal format (e.g., "77,70" -> 77.7)
+
+
+    var commaDecimalPattern = /^[+-]?\s*(\d+(,\d+)?([eE][+-]?\d+)?|,\d+([eE][+-]?\d+)?)$/;
+
+    if (commaDecimalPattern.test(trimmed)) {
+      return true;
+    } // Check for decimal format with optional sign, decimal point, and exponent
+    // Using separate checks to avoid nested quantifiers and ReDoS
+
+
+    var decimalPattern = /^[+-]?\s*(\d+(\.\d+)?([eE][+-]?\d+)?|\.\d+([eE][+-]?\d+)?)$/;
+    return decimalPattern.test(trimmed);
+  }
+
+  if (t == 'object') {
+    return !!n && typeof n.valueOf() == 'number' && !(n instanceof Date);
+  }
+
+  return false;
 }
 /**
  * A specialized version of `.forEach` defined by ranges.
@@ -16902,11 +16939,6 @@ function Core(rootElement, userSettings) {
 
   function validateChanges(changes, source, callback) {
     var waitingForValidator = new ValidatorsQueue();
-
-    var isNumericData = function isNumericData(value) {
-      return value.length > 0 && /^\s*[+-.]?\s*(?:(?:\d+(?:(\.|,)\d+)?(?:e[+-]?\d+)?)|(?:0x[a-f\d]+))\s*$/.test(value);
-    };
-
     waitingForValidator.onQueueEmpty = resolve;
 
     for (var i = changes.length - 1; i >= 0; i--) {
@@ -16921,7 +16953,7 @@ function Core(rootElement, userSettings) {
         var col = datamap.propToCol(prop);
         var cellProperties = instance.getCellMeta(row, col);
 
-        if (cellProperties.type === 'numeric' && typeof newValue === 'string' && isNumericData(newValue)) {
+        if (cellProperties.type === 'numeric' && typeof newValue === 'string' && (0, _number.isNumeric)(newValue)) {
           changes[i][3] = getParsedNumber(newValue);
         }
         /* eslint-disable no-loop-func */
@@ -35770,9 +35802,9 @@ Handsontable.DefaultSettings = _defaultSettings.default;
 Handsontable.EventManager = _eventManager.default;
 Handsontable._getListenersCounter = _eventManager.getListenersCounter; // For MemoryLeak tests
 
-Handsontable.buildDate = "18/12/2018 14:40:17";
-Handsontable.packageName = "handsontable";
-Handsontable.version = "6.2.2";
+Handsontable.buildDate = "25/08/2025 09:28:43";
+Handsontable.packageName = "handsontable-mit";
+Handsontable.version = "6.2.3";
 var baseVersion = "";
 
 if (baseVersion) {

@@ -5,9 +5,202 @@ import {
   hasClass,
   isInput,
   removeClass,
+  HTML_CHARACTERS,
+  fastInnerHTML,
+  fastInnerText,
 } from 'handsontable/helpers/dom/element';
 
 describe('DomElement helper', () => {
+  //
+  // Handsontable.helper.HTML_CHARACTERS
+  //
+  describe('HTML_CHARACTERS', () => {
+    it('should match HTML tags', () => {
+      expect(HTML_CHARACTERS.test('<div>')).toBe(true);
+      expect(HTML_CHARACTERS.test('<span>')).toBe(true);
+      expect(HTML_CHARACTERS.test('<p>')).toBe(true);
+      expect(HTML_CHARACTERS.test('<br/>')).toBe(true);
+      expect(HTML_CHARACTERS.test('<input type="text">')).toBe(true);
+      expect(HTML_CHARACTERS.test('<div class="test">content</div>')).toBe(true);
+    });
+
+    it('should match HTML entities', () => {
+      expect(HTML_CHARACTERS.test('&amp;')).toBe(true);
+      expect(HTML_CHARACTERS.test('&lt;')).toBe(true);
+      expect(HTML_CHARACTERS.test('&gt;')).toBe(true);
+      expect(HTML_CHARACTERS.test('&quot;')).toBe(true);
+      expect(HTML_CHARACTERS.test('&#39;')).toBe(true);
+      expect(HTML_CHARACTERS.test('&nbsp;')).toBe(true);
+      expect(HTML_CHARACTERS.test('&copy;')).toBe(true);
+    });
+
+    it('should not match plain text', () => {
+      expect(HTML_CHARACTERS.test('plain text')).toBe(false);
+      expect(HTML_CHARACTERS.test('123')).toBe(false);
+      expect(HTML_CHARACTERS.test('')).toBe(false);
+      expect(HTML_CHARACTERS.test(' ')).toBe(false);
+    });
+
+    it('should not match incomplete HTML', () => {
+      expect(HTML_CHARACTERS.test('<')).toBe(false);
+      expect(HTML_CHARACTERS.test('>')).toBe(false);
+      expect(HTML_CHARACTERS.test('&')).toBe(false);
+      expect(HTML_CHARACTERS.test('&amp')).toBe(false);
+    });
+
+    it('should be ReDoS-safe', () => {
+      // These patterns could cause ReDoS with the old regex
+      const longTag = `<${'a'.repeat(1000)}>`;
+      const startTime = Date.now();
+      HTML_CHARACTERS.test(longTag);
+      const endTime = Date.now();
+
+      // Should complete quickly (less than 100ms)
+      expect(endTime - startTime).toBeLessThan(100);
+    });
+
+    it('should be ReDoS-safe with complex HTML patterns', () => {
+      // Test with various patterns that could cause ReDoS
+      const longAttribute = `<div${' a="b"'.repeat(1000)}>`;
+      const longEntity = `&${'amp'.repeat(1000)};`;
+      const longIncompleteTag = `<${'a'.repeat(1000)}`;
+      const longIncompleteEntity = `&${'amp'.repeat(1000)}`;
+
+      const startTime = Date.now();
+
+      HTML_CHARACTERS.test(longAttribute);
+      HTML_CHARACTERS.test(longEntity);
+      HTML_CHARACTERS.test(longIncompleteTag);
+      HTML_CHARACTERS.test(longIncompleteEntity);
+
+      const endTime = Date.now();
+
+      // Should complete quickly (less than 100ms)
+      expect(endTime - startTime).toBeLessThan(100);
+    });
+
+    it('should handle nested HTML structures safely', () => {
+      const nestedHtml = `<div><span><p><a href="#">${'nested'.repeat(100)}</a></p></span></div>`;
+      const startTime = Date.now();
+      HTML_CHARACTERS.test(nestedHtml);
+      const endTime = Date.now();
+
+      // Should complete quickly (less than 100ms)
+      expect(endTime - startTime).toBeLessThan(100);
+    });
+
+    it('should handle mixed content safely', () => {
+      const mixedContent = `text${'<div>'.repeat(100)}content${'</div>'.repeat(100)}more text`;
+      const startTime = Date.now();
+      HTML_CHARACTERS.test(mixedContent);
+      const endTime = Date.now();
+
+      // Should complete quickly (less than 100ms)
+      expect(endTime - startTime).toBeLessThan(100);
+    });
+  });
+
+  //
+  // Handsontable.helper.fastInnerHTML
+  //
+  describe('fastInnerHTML', () => {
+    let element;
+
+    beforeEach(() => {
+      element = document.createElement('div');
+    });
+
+    afterEach(() => {
+      element = null;
+    });
+
+    it('should use innerHTML for content with HTML tags', () => {
+      const htmlContent = '<span>test</span>';
+
+      fastInnerHTML(element, htmlContent);
+
+      expect(element.innerHTML).toBe(htmlContent);
+    });
+
+    it('should use innerHTML for content with HTML entities', () => {
+      const entityContent = 'test &amp; more';
+
+      fastInnerHTML(element, entityContent);
+
+      expect(element.innerHTML).toBe(entityContent);
+    });
+
+    it('should use fastInnerText for plain text content', () => {
+      const textContent = 'plain text content';
+
+      fastInnerHTML(element, textContent);
+
+      expect(element.textContent).toBe(textContent);
+      expect(element.innerHTML).toBe(textContent);
+    });
+
+    it('should handle empty content', () => {
+      fastInnerHTML(element, '');
+
+      expect(element.textContent).toBe('');
+    });
+
+    it('should handle whitespace-only content', () => {
+      fastInnerHTML(element, '   ');
+
+      expect(element.textContent).toBe('   ');
+    });
+  });
+
+  //
+  // Handsontable.helper.fastInnerText
+  //
+  describe('fastInnerText', () => {
+    let element;
+
+    beforeEach(() => {
+      element = document.createElement('div');
+    });
+
+    afterEach(() => {
+      element = null;
+    });
+
+    it('should replace existing text node content', () => {
+      element.appendChild(document.createTextNode('original'));
+
+      fastInnerText(element, 'new content');
+
+      expect(element.textContent).toBe('new content');
+      expect(element.childNodes.length).toBe(1);
+    });
+
+    it('should create new text node when element is empty', () => {
+      fastInnerText(element, 'new content');
+
+      expect(element.textContent).toBe('new content');
+      expect(element.childNodes.length).toBe(1);
+      expect(element.firstChild.nodeType).toBe(Node.TEXT_NODE);
+    });
+
+    it('should replace multiple child nodes with single text node', () => {
+      element.innerHTML = '<span>old</span>text<span>content</span>';
+
+      fastInnerText(element, 'new content');
+
+      expect(element.textContent).toBe('new content');
+      expect(element.childNodes.length).toBe(1);
+      expect(element.firstChild.nodeType).toBe(Node.TEXT_NODE);
+    });
+
+    it('should handle empty content', () => {
+      fastInnerText(element, '');
+
+      expect(element.textContent).toBe('');
+      expect(element.childNodes.length).toBe(1);
+    });
+  });
+
   //
   // Handsontable.helper.isInput
   //

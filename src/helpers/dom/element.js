@@ -407,7 +407,8 @@ export function empty(element) {
   }
 }
 
-export const HTML_CHARACTERS = /(<(.*)>|&(.*);)/;
+// Safer regex that avoids ReDoS vulnerability by using non-capturing groups and avoiding nested quantifiers
+export const HTML_CHARACTERS = /(?:<[^>]*>|&[^;]*;)/;
 
 /**
  * Insert content into element trying avoid innerHTML method.
