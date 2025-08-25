@@ -10,7 +10,7 @@
     "url": "https://github.com/DrDiman/handsontable-MIT/issues"
   },
   "author": "deps-developers <SupportDEPS@epam.com>",
-  "version": "6.2.3",
+  "version": "6.2.4",
   "browser": "dist/handsontable.js",
   "main": "commonjs/index.js",
   "module": "es/index.js",

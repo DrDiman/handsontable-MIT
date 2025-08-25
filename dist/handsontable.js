@@ -23,8 +23,8 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- * Version: 6.2.3
- * Release date: 19/12/2018 (built at 25/08/2025 09:28:43)
+ * Version: 6.2.4
+ * Release date: 19/12/2018 (built at 25/08/2025 10:08:17)
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -29766,9 +29766,9 @@ Handsontable.DefaultSettings = _defaultSettings.default;
 Handsontable.EventManager = _eventManager.default;
 Handsontable._getListenersCounter = _eventManager.getListenersCounter; // For MemoryLeak tests
 
-Handsontable.buildDate = "25/08/2025 09:28:43";
+Handsontable.buildDate = "25/08/2025 10:08:17";
 Handsontable.packageName = "handsontable-mit";
-Handsontable.version = "6.2.3";
+Handsontable.version = "6.2.4";
 var baseVersion = "";
 
 if (baseVersion) {
